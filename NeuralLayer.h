@@ -60,6 +60,7 @@ private:
 
 class MaxPooling : NeuralLayer
 {
+public:
     size_t poolingSize;
 
     MaxPooling(size_t poolSize = 2);
@@ -76,4 +77,20 @@ private:
     * index for the max input given, thus this index can be used in the previous layer's output.
     */
     std::vector<size_t> maxIndexes;
+};
+
+class FullyConnected : NeuralLayer
+{
+public:
+    std::vector<float> weights;
+    std::vector<float> biasWeights;
+
+    FullyConnected(size_t outputSize);
+
+    void FeedForward();
+    void BackPropogate();
+    void Create(NeuralLayer* previousLayer);
+
+private:
+    size_t sizePreviousLayer = 0;
 };

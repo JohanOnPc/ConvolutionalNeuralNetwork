@@ -17,8 +17,11 @@ void Convolution::FeedForward()
     for (size_t k = 0; k < kernelAmount; k++) {
         for (size_t j = 0; j < outputHeight; j++) {
             for (size_t i = 0; i < outputWidth; i++) {
-                float sum = CrossCorrelation(i, j, k);
-                outputs[k * kernelSize * kernelSize + j * kernelSize + i] = sum;
+                float Z = CrossCorrelation(i, j, k) + biasWeights[k];
+
+                //activation function
+
+                outputs[k * kernelSize * kernelSize + j * kernelSize + i] = Z;
             }
         }
     }
@@ -75,7 +78,7 @@ void MaxPooling::FeedForward()
     for (size_t k = 0; k < outputChannels; k++) {
         for (size_t j = 0; j < outputHeight; j++) {
             for (size_t i = 0; i < outputWidth; i++) {
-
+                Max(i, j, k);
             }
         }
     }
@@ -111,7 +114,7 @@ void MaxPooling::Max(size_t i, size_t j, size_t k)
     size_t index = 0;
 
     for (size_t Y = 0; Y < poolingSize; Y++) {
-        size_t y = inputJ + y * previousLayer->outputWidth;
+        size_t y = inputJ + Y * previousLayer->outputWidth;
 
         for (size_t x = 0; x < poolingSize; x++) {
             if (max < previousLayer->outputs[inputK + y + x]) {
@@ -124,4 +127,42 @@ void MaxPooling::Max(size_t i, size_t j, size_t k)
     size_t outputIndex = k * outputWidth * outputHeight + j * outputWidth + i;
     outputs[outputIndex] = max;
     maxIndexes[outputIndex] = index;
+}
+
+FullyConnected::FullyConnected(size_t outputSize)
+{
+    outputChannels = 1;
+    outputWidth = 1;
+    outputHeight = outputSize;
+
+    biasWeights.reserve(outputSize);
+}
+
+void FullyConnected::FeedForward()
+{
+    for (size_t k = 0; k < outputHeight; k++) {
+        float Z = 0;
+
+        for (size_t j = 0; j < sizePreviousLayer; j++) {
+            Z += previousLayer->outputs[j] * weights[k * outputHeight + j];
+        }
+
+        Z += biasWeights[k];
+
+        //Activation Function
+
+        outputs[k] = Z;
+    }
+}
+
+void FullyConnected::BackPropogate()
+{
+}
+
+void FullyConnected::Create(NeuralLayer* previousLayer)
+{
+    this->previousLayer = previousLayer;
+    sizePreviousLayer = previousLayer->outputWidth * previousLayer->outputHeight * previousLayer->outputChannels;
+
+    weights.reserve(outputHeight * sizePreviousLayer);
 }
