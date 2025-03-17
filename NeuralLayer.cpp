@@ -14,13 +14,11 @@ Convolution::Convolution(size_t amount, size_t kernelSize, size_t padding, size_
 
 void Convolution::FeedForward()
 {
-    for (size_t k = 0; k < kernelAmount; k++)
-    {
-        for (size_t j = 0; j < previousLayer->outputHeight; j++)
-        {
-            for (size_t i = 0; i < previousLayer->outputWidth; i++)
-            {
-
+    for (size_t k = 0; k < kernelAmount; k++) {
+        for (size_t j = 0; j < outputHeight; j++) {
+            for (size_t i = 0; i < outputWidth; i++) {
+                float sum = CrossCorrelation(i, j, k);
+                outputs[k * kernelSize * kernelSize + j * kernelSize + i] = sum;
             }
         }
     }
@@ -42,17 +40,22 @@ void Convolution::Create(NeuralLayer* previousLayer)
     kernelWeights.reserve(kernelAmount * previousLayer->outputChannels * kernelSize * kernelSize);
 }
 
-float Convolution::CrossCorrelation(size_t beginX, size_t beginY, size_t kernel = 0) const
+
+/*
+* Cross Corelates the kernel given by the index, with the previous layer's output based upon
+* The given x and y coordinates.
+*/
+float Convolution::CrossCorrelation(size_t beginX, size_t beginY, size_t kernel) const
 {
-    float kernelBase = kernel * kernelSize * kernelSize;
+    size_t kernelBase = kernel * kernelSize * kernelSize;
     float sum = 0;
     for (size_t k = 0; k <= previousLayer->outputChannels; k++) {
         for (size_t y = 0; y < kernelSize; y++) {
-            float Y = y + beginY;
+            size_t Y = y + beginY;
             for (size_t x = 0; x < + kernelSize; x++) {
-                float X = x + beginX;
+                size_t X = x + beginX;
 
-                float input = previousLayer->outputs[kernel * previousLayer->outputWidth * outputHeight + Y * outputWidth + X];
+                float input = previousLayer->outputs[k * previousLayer->outputWidth * previousLayer->outputHeight + Y * previousLayer->outputWidth + X];
                 float weight = kernelWeights[kernelBase + y * kernelSize + x];
                 sum += input * weight;
             }
@@ -60,4 +63,65 @@ float Convolution::CrossCorrelation(size_t beginX, size_t beginY, size_t kernel 
     }
 
     return sum;
+}
+
+MaxPooling::MaxPooling(size_t poolSize) :
+    poolingSize(poolSize)
+{
+}
+
+void MaxPooling::FeedForward()
+{
+    for (size_t k = 0; k < outputChannels; k++) {
+        for (size_t j = 0; j < outputHeight; j++) {
+            for (size_t i = 0; i < outputWidth; i++) {
+
+            }
+        }
+    }
+}
+
+void MaxPooling::BackPropogate()
+{
+}
+
+void MaxPooling::Create(NeuralLayer* previousLayer)
+{
+    this->previousLayer = previousLayer;
+
+    outputWidth = previousLayer->outputWidth / poolingSize;
+    outputHeight = previousLayer->outputHeight / poolingSize;
+    outputChannels = previousLayer->outputChannels;
+
+    outputs.reserve(outputWidth * outputHeight * outputChannels);
+    maxIndexes.reserve(outputWidth * outputHeight * outputChannels);
+}
+
+/*
+* Calcules the max value based upon the previous layer's output. 
+* the i, j, and k values are given for this layer itself.
+*/
+void MaxPooling::Max(size_t i, size_t j, size_t k)
+{
+    size_t inputK = k * previousLayer->outputWidth * previousLayer->outputHeight;
+    size_t inputJ = inputK + j * poolingSize * previousLayer->outputWidth;
+    size_t inputI = inputJ + i * poolingSize;
+
+    float max = std::numeric_limits<float>::lowest(); //set to lowest possible value for floats.
+    size_t index = 0;
+
+    for (size_t Y = 0; Y < poolingSize; Y++) {
+        size_t y = inputJ + y * previousLayer->outputWidth;
+
+        for (size_t x = 0; x < poolingSize; x++) {
+            if (max < previousLayer->outputs[inputK + y + x]) {
+                index = inputK + y + x;
+                max = previousLayer->outputs[index];
+            }
+        }
+    }
+
+    size_t outputIndex = k * outputWidth * outputHeight + j * outputWidth + i;
+    outputs[outputIndex] = max;
+    maxIndexes[outputIndex] = index;
 }
