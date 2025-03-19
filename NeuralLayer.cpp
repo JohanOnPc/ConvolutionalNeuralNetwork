@@ -1,9 +1,11 @@
 #include "NeuralLayer.h"
+#include "common.h"
 
 #include <iostream>
 #include <algorithm>
 #include <ranges>
 #include <numeric>
+#include <format>
 
 void NeuralLayer::SetActivationFuction(std::string ActivationFunction)
 {
@@ -39,6 +41,13 @@ Input::Input(size_t width, size_t height, size_t channels) :
     NeuralLayer(width, height, channels)
 {
     outputs.reserve(width * height * channels);
+}
+
+size_t Input::PrintStats() const
+{
+    std::cout << std::format("Input [{}, {}, {}]\n", outputWidth, outputHeight, outputChannels);
+
+    return 0;
 }
 
 Convolution::Convolution(size_t amount, size_t kernelSize, size_t padding, size_t stride, std::string ActivationFunction) :
@@ -78,6 +87,18 @@ void Convolution::Create(NeuralLayer* previousLayer)
 
     outputs.reserve(outputWidth * outputHeight * outputChannels);
     kernelWeights.reserve(kernelAmount * previousLayer->outputChannels * kernelSize * kernelSize);
+
+    InitWeights(biasWeights, kernelAmount,kernelSize * kernelSize);
+    InitWeights(kernelWeights, kernelSize * kernelSize * kernelAmount, kernelSize * kernelSize);
+}
+
+size_t Convolution::PrintStats() const
+{
+    size_t params = kernelWeights.size() + biasWeights.size();
+
+    std::cout << std::format("Convolution [{}, {}, {}] {}\n", outputWidth, outputHeight, outputChannels, params);
+
+    return params;
 }
 
 
@@ -135,6 +156,13 @@ void MaxPooling::Create(NeuralLayer* previousLayer)
 
     outputs.reserve(outputWidth * outputHeight * outputChannels);
     maxIndexes.reserve(outputWidth * outputHeight * outputChannels);
+}
+
+size_t MaxPooling::PrintStats() const
+{
+    std::cout << std::format("MaxPooling [{}, {}, {}] {}\n", outputWidth, outputHeight, outputChannels, 0);
+
+    return 0;
 }
 
 /*
@@ -204,4 +232,16 @@ void FullyConnected::Create(NeuralLayer* previousLayer)
     sizePreviousLayer = previousLayer->outputWidth * previousLayer->outputHeight * previousLayer->outputChannels;
 
     weights.reserve(outputHeight * sizePreviousLayer);
+
+    InitWeights(weights, outputHeight * sizePreviousLayer, sizePreviousLayer);
+    InitWeights(biasWeights, outputHeight,sizePreviousLayer);
+}
+
+size_t FullyConnected::PrintStats() const
+{
+    size_t params = weights.size() + biasWeights.size();
+
+    std::cout << std::format("FullyConnected [{}] {}\n", outputHeight, params);
+
+    return params;
 }

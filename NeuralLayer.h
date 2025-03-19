@@ -14,6 +14,8 @@ public:
     virtual void FeedForward() = 0;
     virtual void BackPropogate() = 0;
     virtual void Create(NeuralLayer* previousLayer) = 0;
+    virtual size_t PrintStats() const = 0;
+
     void SetActivationFuction(std::string ActivationFunction);
 
     static void ReLu(NeuralLayer *NL);
@@ -37,6 +39,7 @@ public:
     void FeedForward() {};
     void BackPropogate() {};
     void Create(NeuralLayer *previousLayer) {};
+    size_t PrintStats() const;
 };
 
 class Convolution : public NeuralLayer
@@ -62,6 +65,7 @@ public:
     void FeedForward();
     void BackPropogate();
     void Create(NeuralLayer* previousLayer);
+    size_t PrintStats() const;
 
 private:
     float CrossCorrelation(size_t beginX, size_t beginY, size_t kernel = 0) const;
@@ -77,6 +81,7 @@ public:
     void FeedForward();
     void BackPropogate();
     void Create(NeuralLayer* previousLayer);
+    size_t PrintStats() const;
 
 private:
     void Max(size_t i, size_t j, size_t k);
@@ -103,6 +108,7 @@ public:
     void FeedForward();
     void BackPropogate();
     void Create(NeuralLayer* previousLayer);
+    size_t PrintStats() const;
 
 private:
     size_t sizePreviousLayer = 0;

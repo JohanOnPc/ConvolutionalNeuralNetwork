@@ -17,5 +17,6 @@ public:
     void AddLayer(NeuralLayer* layer);
 
     void Create();
+    void PrintSummary() const;
 };
  
