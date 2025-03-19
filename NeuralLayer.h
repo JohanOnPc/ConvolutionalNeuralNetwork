@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 class NeuralLayer
 {
@@ -13,14 +14,22 @@ public:
     virtual void FeedForward() = 0;
     virtual void BackPropogate() = 0;
     virtual void Create(NeuralLayer* previousLayer) = 0;
+    void SetActivationFuction(std::string ActivationFunction);
+
+    static void ReLu(NeuralLayer *NL);
+    static void ReLuDerivative(NeuralLayer* NL);
+    
+    static void SoftMax(NeuralLayer* NL);
 
     NeuralLayer(size_t width, size_t height, size_t channels) :
         outputWidth(width), outputHeight(height), outputChannels(channels) {}
     NeuralLayer() :
         outputWidth(0), outputHeight(0), outputChannels(0) { }
+
+    void (*Activation)(NeuralLayer*) = nullptr;
 };
 
-class Input : NeuralLayer
+class Input : public NeuralLayer
 {
 public:
     Input(size_t width, size_t height, size_t channels);
@@ -30,7 +39,7 @@ public:
     void Create(NeuralLayer *previousLayer) {};
 };
 
-class Convolution : NeuralLayer
+class Convolution : public NeuralLayer
 {
 public:
     size_t kernelSize, padding, stride, kernelAmount;
@@ -48,7 +57,7 @@ public:
     */
     std::vector<float> biasWeights;
 
-    Convolution(size_t amount, size_t kernelSize, size_t padding = 0, size_t stride = 1);
+    Convolution(size_t amount, size_t kernelSize, size_t padding = 0, size_t stride = 1, std::string ActivationFunction = "relu");
 
     void FeedForward();
     void BackPropogate();
@@ -58,7 +67,7 @@ private:
     float CrossCorrelation(size_t beginX, size_t beginY, size_t kernel = 0) const;
 };
 
-class MaxPooling : NeuralLayer
+class MaxPooling : public NeuralLayer
 {
 public:
     size_t poolingSize;
@@ -79,13 +88,17 @@ private:
     std::vector<size_t> maxIndexes;
 };
 
-class FullyConnected : NeuralLayer
+class FullyConnected : public NeuralLayer
 {
 public:
+    /*
+    * Contains all the weights for this connected layer, all the weights used by the first output
+    * neuron are at the front of this vector. After that all the weights used by the second output neuron follow it.
+    */
     std::vector<float> weights;
     std::vector<float> biasWeights;
 
-    FullyConnected(size_t outputSize);
+    FullyConnected(size_t outputSize, std::string ActivationFunction = "relu");
 
     void FeedForward();
     void BackPropogate();

@@ -1,15 +1,52 @@
 #include "NeuralLayer.h"
 
+#include <iostream>
+#include <algorithm>
+#include <ranges>
+#include <numeric>
+
+void NeuralLayer::SetActivationFuction(std::string ActivationFunction)
+{
+    if (ActivationFunction == "relu")
+        Activation = ReLu;
+    else if (ActivationFunction == "softmax")
+        Activation = SoftMax;
+    else
+    {
+        std::cerr << "Given Activation function: '" << ActivationFunction << "' does not exists!\n Exiting!";
+        exit(1);
+    }
+}
+
+void NeuralLayer::ReLu(NeuralLayer* NL)
+{
+    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [](float Z) {return std::max(0.f, Z); });
+}
+
+void NeuralLayer::ReLuDerivative(NeuralLayer* NL)
+{
+    
+}
+
+void NeuralLayer::SoftMax(NeuralLayer* NL)
+{
+    float sum = std::accumulate(NL->outputs.cbegin(), NL->outputs.cend(), 0.f, [](float acc, float Z) {return acc + std::expf(Z); });
+
+    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [&sum](float Z) {return std::expf(Z) / sum; });
+}
+
 Input::Input(size_t width, size_t height, size_t channels) : 
     NeuralLayer(width, height, channels)
 {
     outputs.reserve(width * height * channels);
 }
 
-Convolution::Convolution(size_t amount, size_t kernelSize, size_t padding, size_t stride) :
+Convolution::Convolution(size_t amount, size_t kernelSize, size_t padding, size_t stride, std::string ActivationFunction) :
     kernelSize(kernelSize), padding(padding), stride(stride), kernelAmount(amount)
 {
     biasWeights.reserve(amount);
+
+    SetActivationFuction(ActivationFunction);
 }
 
 void Convolution::FeedForward()
@@ -19,12 +56,12 @@ void Convolution::FeedForward()
             for (size_t i = 0; i < outputWidth; i++) {
                 float Z = CrossCorrelation(i, j, k) + biasWeights[k];
 
-                //activation function
-
                 outputs[k * kernelSize * kernelSize + j * kernelSize + i] = Z;
             }
         }
     }
+
+    Activation(this);
 }
 
 void Convolution::BackPropogate()
@@ -129,13 +166,15 @@ void MaxPooling::Max(size_t i, size_t j, size_t k)
     maxIndexes[outputIndex] = index;
 }
 
-FullyConnected::FullyConnected(size_t outputSize)
+FullyConnected::FullyConnected(size_t outputSize, std::string ActivationFunction)
 {
     outputChannels = 1;
     outputWidth = 1;
     outputHeight = outputSize;
 
     biasWeights.reserve(outputSize);
+
+    SetActivationFuction(ActivationFunction);
 }
 
 void FullyConnected::FeedForward()
@@ -149,10 +188,10 @@ void FullyConnected::FeedForward()
 
         Z += biasWeights[k];
 
-        //Activation Function
-
         outputs[k] = Z;
     }
+
+    Activation(this);
 }
 
 void FullyConnected::BackPropogate()

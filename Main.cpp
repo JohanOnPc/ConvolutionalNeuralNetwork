@@ -2,9 +2,16 @@
 
 int main()
 {
-    Convolution test(2, 2);
-    MaxPooling test2(2);
-    FullyConnected test3(30);
+    NeuralNetwork *model = new NeuralNetwork();
+    model->AddLayer(new Input(28, 28, 1));
+    model->AddLayer(new Convolution(5, 5, 2));
+    model->AddLayer(new MaxPooling(2));
+    model->AddLayer(new Convolution(5, 5, 2));
+    model->AddLayer(new FullyConnected(100));
+    model->AddLayer(new FullyConnected(30));
+    model->AddLayer(new FullyConnected(10, "softmax"));
+
+    model->Create();
 
     return 0;
 }
