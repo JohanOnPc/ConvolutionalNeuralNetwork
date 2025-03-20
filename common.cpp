@@ -28,3 +28,19 @@ void PrintVector(const std::vector<float>& vec)
 			std::cout << val << ", ";
 	}
 }
+
+float CrossEntropyLoss(const std::vector<float>& expected, const std::vector<float>& output)
+{
+	if (expected.size() != output.size()) {
+		std::cout << "Error, the size of the given output and expected output are not the same!\n";
+		exit(1);
+	}
+
+	float error = 0.f;
+
+	for (size_t i = 0; i < expected.size(); i++) {
+		error += expected[i] * std::logf(output[i]);
+	}
+
+	return -error;
+}
