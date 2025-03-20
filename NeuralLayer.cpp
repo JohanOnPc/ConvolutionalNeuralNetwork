@@ -86,6 +86,7 @@ void Convolution::Create(NeuralLayer* previousLayer)
     outputChannels = kernelAmount;
 
     outputs.reserve(outputWidth * outputHeight * outputChannels);
+    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
     kernelWeights.reserve(kernelAmount * previousLayer->outputChannels * kernelSize * kernelSize);
 
     InitWeights(biasWeights, kernelAmount,kernelSize * kernelSize);
@@ -110,7 +111,7 @@ float Convolution::CrossCorrelation(size_t beginX, size_t beginY, size_t kernel)
 {
     size_t kernelBase = kernel * kernelSize * kernelSize;
     float sum = 0;
-    for (size_t k = 0; k <= previousLayer->outputChannels; k++) {
+    for (size_t k = 0; k < previousLayer->outputChannels; k++) {
         for (size_t y = 0; y < kernelSize; y++) {
             size_t Y = y + beginY;
             for (size_t x = 0; x < + kernelSize; x++) {
@@ -155,7 +156,9 @@ void MaxPooling::Create(NeuralLayer* previousLayer)
     outputChannels = previousLayer->outputChannels;
 
     outputs.reserve(outputWidth * outputHeight * outputChannels);
+    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
     maxIndexes.reserve(outputWidth * outputHeight * outputChannels);
+    maxIndexes.assign(outputWidth * outputHeight * outputChannels, 1.0f);
 }
 
 size_t MaxPooling::PrintStats() const
@@ -182,8 +185,8 @@ void MaxPooling::Max(size_t i, size_t j, size_t k)
         size_t y = inputJ + Y * previousLayer->outputWidth;
 
         for (size_t x = 0; x < poolingSize; x++) {
-            if (max < previousLayer->outputs[inputK + y + x]) {
-                index = inputK + y + x;
+            if (max < previousLayer->outputs[y + x]) {
+                index = y + x;
                 max = previousLayer->outputs[index];
             }
         }
@@ -211,7 +214,7 @@ void FullyConnected::FeedForward()
         float Z = 0;
 
         for (size_t j = 0; j < sizePreviousLayer; j++) {
-            Z += previousLayer->outputs[j] * weights[k * outputHeight + j];
+            Z += previousLayer->outputs[j] * weights[k * outputWidth + j];
         }
 
         Z += biasWeights[k];
@@ -232,6 +235,7 @@ void FullyConnected::Create(NeuralLayer* previousLayer)
     sizePreviousLayer = previousLayer->outputWidth * previousLayer->outputHeight * previousLayer->outputChannels;
 
     weights.reserve(outputHeight * sizePreviousLayer);
+    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
 
     InitWeights(weights, outputHeight * sizePreviousLayer, sizePreviousLayer);
     InitWeights(biasWeights, outputHeight,sizePreviousLayer);

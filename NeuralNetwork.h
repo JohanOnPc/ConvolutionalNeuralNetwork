@@ -16,6 +16,8 @@ public:
 
     void AddLayer(NeuralLayer* layer);
 
+    std::vector<float> Predict(const std::vector<float> &Input);
+
     void Create();
     void PrintSummary() const;
 };
