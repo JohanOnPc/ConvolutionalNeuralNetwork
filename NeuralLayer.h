@@ -7,7 +7,7 @@ class NeuralLayer
 {
 public:
     size_t outputWidth, outputHeight, outputChannels;
-    std::vector<float> outputs;
+    std::vector<float> outputs, outputGradients;
 
     NeuralLayer* previousLayer = nullptr;
 
@@ -100,8 +100,8 @@ public:
     * Contains all the weights for this connected layer, all the weights used by the first output
     * neuron are at the front of this vector. After that all the weights used by the second output neuron follow it.
     */
-    std::vector<float> weights;
-    std::vector<float> biasWeights;
+    std::vector<float> weights, weightGradients;
+    std::vector<float> biasWeights, biasGradients;
 
     FullyConnected(size_t outputSize, std::string ActivationFunction = "relu");
 

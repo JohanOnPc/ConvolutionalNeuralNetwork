@@ -156,9 +156,9 @@ void MaxPooling::Create(NeuralLayer* previousLayer)
     outputChannels = previousLayer->outputChannels;
 
     outputs.reserve(outputWidth * outputHeight * outputChannels);
-    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
+    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0f);
     maxIndexes.reserve(outputWidth * outputHeight * outputChannels);
-    maxIndexes.assign(outputWidth * outputHeight * outputChannels, 1.0f);
+    maxIndexes.assign(outputWidth * outputHeight * outputChannels, 0);
 }
 
 size_t MaxPooling::PrintStats() const
@@ -214,7 +214,7 @@ void FullyConnected::FeedForward()
         float Z = 0;
 
         for (size_t j = 0; j < sizePreviousLayer; j++) {
-            Z += previousLayer->outputs[j] * weights[k * outputWidth + j];
+            Z += previousLayer->outputs[j] * weights[k * sizePreviousLayer + j];
         }
 
         Z += biasWeights[k];
@@ -227,6 +227,33 @@ void FullyConnected::FeedForward()
 
 void FullyConnected::BackPropogate()
 {
+    //Gradient with respect to the output after activation
+    //Calculate the gradient with respect to the output based on the derivative of the used activation fucntion. 
+
+    //Gradient with respect to the weights
+
+    for (size_t k = 0; k < outputHeight; k++) {
+        for (size_t j = 0; j < sizePreviousLayer; j++) {
+            weightGradients[k * outputHeight + j] = previousLayer->outputs[j] * outputGradients[k];
+        }
+    }
+
+    //Gradient with respect to the bias
+
+    for (size_t i = 0; i < outputHeight; i++)
+        biasGradients[i] = outputGradients[i];
+
+    //Gradient with respect to the input
+
+    for (size_t j = 0; j < sizePreviousLayer; j++) {
+        float gradient = 0.f;
+
+        for (size_t k = 0; k < outputHeight; k++) {
+            gradient += outputGradients[k] * weights[k * sizePreviousLayer + j];
+        }
+
+        previousLayer->outputGradients[j] = gradient;
+    }
 }
 
 void FullyConnected::Create(NeuralLayer* previousLayer)
@@ -235,7 +262,11 @@ void FullyConnected::Create(NeuralLayer* previousLayer)
     sizePreviousLayer = previousLayer->outputWidth * previousLayer->outputHeight * previousLayer->outputChannels;
 
     weights.reserve(outputHeight * sizePreviousLayer);
-    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
+    outputs.assign(outputHeight, 0.f);
+
+    outputGradients.assign(outputHeight, 0.f);
+    weightGradients.assign(outputHeight * sizePreviousLayer, 0.f);
+    biasGradients.assign(outputHeight, 0.f);
 
     InitWeights(weights, outputHeight * sizePreviousLayer, sizePreviousLayer);
     InitWeights(biasWeights, outputHeight,sizePreviousLayer);
