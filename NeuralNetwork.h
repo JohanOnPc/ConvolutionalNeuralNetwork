@@ -20,5 +20,9 @@ public:
 
     void Create();
     void PrintSummary() const;
+    void Fit();
+
+private:
+    void BackPropogate(const std::vector<float>& expected);
 };
  

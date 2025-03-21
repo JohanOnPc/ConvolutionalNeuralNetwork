@@ -1,6 +1,8 @@
 #include "NeuralNetwork.h"
+#include "common.h"
 
 #include <iostream>
+#include <ranges>
 
 void NeuralNetwork::AddLayer(NeuralLayer* layer)
 {
@@ -44,4 +46,22 @@ void NeuralNetwork::PrintSummary() const
 	}
 
 	std::cout << "Total Trainable params: " << totalParams << '\n';
+}
+
+void NeuralNetwork::Fit()
+{
+	//set input to data
+	//feed forward through all the layers
+	//Calculate the error
+	//Propogate the gradients throughout the network
+}
+
+void NeuralNetwork::BackPropogate(const std::vector<float>& expected)
+{
+	for (size_t i = 0; i < expected.size(); i++)
+		Layers.back()->outputGradients[i] = Layers.back()->outputs[i] - expected[i];
+
+	for (auto& layer : std::views::reverse(Layers)) {
+		layer->BackPropogate();
+	}
 }
