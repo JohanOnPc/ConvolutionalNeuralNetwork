@@ -1,5 +1,6 @@
 #include "NeuralNetwork.h"
 #include "common.h"
+#include "MNISTreader.h"
 
 int main()
 {
@@ -19,6 +20,8 @@ int main()
 
     auto output = model->Predict(std::vector<float>(28*28, 0.5f));
     PrintVector(output);
+
+    dataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
 
     return 0;
 }

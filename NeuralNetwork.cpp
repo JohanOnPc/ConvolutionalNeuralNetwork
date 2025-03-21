@@ -45,26 +45,37 @@ void NeuralNetwork::PrintSummary() const
 	std::cout << "Total Trainable params: " << totalParams << '\n';
 }
 
-void NeuralNetwork::Fit(const std::vector<std::vector<float>>& input, const std::vector<size_t>& labels)
+void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& trainInput, const std::vector<size_t>& trainLabels, const std::vector<std::vector<float>>& validationInput, const std::vector<size_t>& validationLabels)
 {
 	//set input to data
 	//feed forward through all the layers
 	//Calculate the error
 	//Propogate the gradients throughout the network
 
-	if (input.size() != labels.size()) {
-		std::cout << "Error Fit(), Amount of Inputs is not the same as the amount of labels\n";
+	if (trainInput.size() != trainLabels.size()) {
+		std::cout << "Error Fit(), Amount of training inputs is not the same as the amount of labels\n";
 		exit(1);
 	}
 
-	for (size_t n = 0; n < input.size(); n++) {
-		Layers.front()->outputs = input[n];
-		FeedForward();
+	if (validationInput.size() != validationLabels.size()) {
+		std::cout << "Error Fit(), Amount of validation inputs is not the same as the amount of labels\n";
+		exit(1);
+	}
 
-		auto expectedOutput = LabelToOneHotEncoding(labels[n], Layers.back()->outputHeight);
+	for (size_t epoch = 0; epoch < epochs; epoch++) {
+		for (size_t n = 0; n < trainInput.size(); n++) {
+			Layers.front()->outputs = trainInput[n];
+			FeedForward();
 
-		float loss = CrossEntropyLoss(expectedOutput, Layers.back()->outputs);
-		BackPropogate(expectedOutput);
+			auto expectedOutput = LabelToOneHotEncoding(trainLabels[n], Layers.back()->outputHeight);
+
+			float loss = CrossEntropyLoss(expectedOutput, Layers.back()->outputs);
+			BackPropogate(expectedOutput);
+		}
+
+		for (size_t n = 0; n < validationInput.size(); n++) {
+
+		}
 	}
 }
 

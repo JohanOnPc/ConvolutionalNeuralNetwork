@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "NeuralLayer.h"
+#include "common.h"
 
 class NeuralNetwork
 {
@@ -20,7 +21,8 @@ public:
 
     void Create();
     void PrintSummary() const;
-    void Fit(const std::vector<std::vector<float>>& Input, const std::vector<size_t>& labels);
+    //void Fit(size_t epochs, const struct dataSet& dataSet);
+    void Fit(size_t epochs, const std::vector<std::vector<float>>& trainInput, const std::vector<size_t>& trainLabels, const std::vector<std::vector<float>>& validationInput, const std::vector<size_t>& validationLabels);
 
 private:
     void BackPropogate(const std::vector<float>& expected);
