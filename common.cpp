@@ -47,5 +47,9 @@ float CrossEntropyLoss(const std::vector<float>& expected, const std::vector<flo
 
 std::vector<float> LabelToOneHotEncoding(size_t label, size_t outputSize)
 {
+	std::vector<float> labels;
+	labels.assign(outputSize, 0.f);
+	labels[label] = 1.f;
 
+	return labels;
 }
