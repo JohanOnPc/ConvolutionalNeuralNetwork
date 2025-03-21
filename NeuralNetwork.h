@@ -20,9 +20,10 @@ public:
 
     void Create();
     void PrintSummary() const;
-    void Fit();
+    void Fit(const std::vector<std::vector<float>>& Input, const std::vector<size_t>& labels);
 
 private:
     void BackPropogate(const std::vector<float>& expected);
+    inline void FeedForward();
 };
  

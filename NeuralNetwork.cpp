@@ -18,10 +18,7 @@ std::vector<float> NeuralNetwork::Predict(const std::vector<float>& Input)
 
 	Layers[0]->outputs = Input;
 
-	for (auto& layer : Layers)
-	{
-		layer->FeedForward();
-	}
+	FeedForward();
 
 	return Layers.back()->outputs;
 }
@@ -48,12 +45,27 @@ void NeuralNetwork::PrintSummary() const
 	std::cout << "Total Trainable params: " << totalParams << '\n';
 }
 
-void NeuralNetwork::Fit()
+void NeuralNetwork::Fit(const std::vector<std::vector<float>>& input, const std::vector<size_t>& labels)
 {
 	//set input to data
 	//feed forward through all the layers
 	//Calculate the error
 	//Propogate the gradients throughout the network
+
+	if (input.size() != labels.size()) {
+		std::cout << "Error Fit(), Amount of Inputs is not the same as the amount of labels\n";
+		exit(1);
+	}
+
+	for (size_t n = 0; n < input.size(); n++) {
+		Layers.front()->outputs = input[n];
+		FeedForward();
+
+		auto expectedOutput = LabelToOneHotEncoding(labels[n], Layers.back()->outputHeight);
+
+		float loss = CrossEntropyLoss(expectedOutput, Layers.back()->outputs);
+		BackPropogate(expectedOutput);
+	}
 }
 
 void NeuralNetwork::BackPropogate(const std::vector<float>& expected)
@@ -63,5 +75,13 @@ void NeuralNetwork::BackPropogate(const std::vector<float>& expected)
 
 	for (auto& layer : std::views::reverse(Layers)) {
 		layer->BackPropogate();
+	}
+}
+
+inline void NeuralNetwork::FeedForward()
+{
+	for (auto& layer : Layers)
+	{
+		layer->FeedForward();
 	}
 }
