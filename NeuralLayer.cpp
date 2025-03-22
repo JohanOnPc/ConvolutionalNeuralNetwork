@@ -152,6 +152,13 @@ void MaxPooling::FeedForward()
 
 void MaxPooling::BackPropogate()
 {
+    //Reset all the gradients for the input
+    std::fill(previousLayer->outputGradients.begin(), previousLayer->outputGradients.end(), 0.f);
+
+    //Set the gradient for the inputs only for those with the max value that was given to this output;
+    for (size_t i = 0; i < outputWidth * outputHeight * outputChannels; i++) {
+        previousLayer->outputGradients[maxIndexes[i]] = outputGradients[i];
+    }
 }
 
 void MaxPooling::Create(NeuralLayer* previousLayer)
@@ -184,19 +191,21 @@ size_t MaxPooling::PrintStats() const
 void MaxPooling::Max(size_t i, size_t j, size_t k)
 {
     size_t inputK = k * previousLayer->outputWidth * previousLayer->outputHeight;
-    size_t inputJ = inputK + j * poolingSize * previousLayer->outputWidth;
-    size_t inputI = inputJ + i * poolingSize;
 
     float max = std::numeric_limits<float>::lowest(); //set to lowest possible value for floats.
     size_t index = 0;
 
-    for (size_t Y = 0; Y < poolingSize; Y++) {
-        size_t y = inputJ + Y * previousLayer->outputWidth;
+    for (size_t y = 0; y < poolingSize; y++) {
+        size_t inputY = j * poolingSize + y;
 
         for (size_t x = 0; x < poolingSize; x++) {
-            if (max < previousLayer->outputs[y + x]) {
-                index = y + x;
-                max = previousLayer->outputs[index];
+            size_t inputX = i * poolingSize + x;
+
+            size_t inputIndex = inputK + inputY * previousLayer->outputWidth + inputX;
+
+            if (max < previousLayer->outputs[inputIndex]) {
+                index = inputIndex;
+                max = previousLayer->outputs[inputIndex];
             }
         }
     }
