@@ -29,6 +29,9 @@ public:
         outputWidth(0), outputHeight(0), outputChannels(0) { }
 
     void (*Activation)(NeuralLayer*) = nullptr;
+
+protected:
+    float learningRate = 0.008f;
 };
 
 class Input : public NeuralLayer

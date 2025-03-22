@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <ranges>
+#include <chrono>
 
 void NeuralNetwork::AddLayer(NeuralLayer* layer)
 {
@@ -45,6 +46,11 @@ void NeuralNetwork::PrintSummary() const
 	std::cout << "Total Trainable params: " << totalParams << '\n';
 }
 
+void NeuralNetwork::Fit(size_t epochs, const dataSet& dataSet)
+{
+	Fit(epochs, dataSet.trainInput, dataSet.trainLabels, dataSet.validationInput, dataSet.validationLabels);
+}
+
 void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& trainInput, const std::vector<size_t>& trainLabels, const std::vector<std::vector<float>>& validationInput, const std::vector<size_t>& validationLabels)
 {
 	//set input to data
@@ -63,6 +69,11 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 	}
 
 	for (size_t epoch = 0; epoch < epochs; epoch++) {
+		float totalLoss = 0.f;
+
+		std::cout << "Epoch " << epoch + 1 << "/" << epochs << '\n';
+		const auto startTime = std::chrono::steady_clock::now();
+
 		for (size_t n = 0; n < trainInput.size(); n++) {
 			Layers.front()->outputs = trainInput[n];
 			FeedForward();
@@ -70,8 +81,17 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 			auto expectedOutput = LabelToOneHotEncoding(trainLabels[n], Layers.back()->outputHeight);
 
 			float loss = CrossEntropyLoss(expectedOutput, Layers.back()->outputs);
-			BackPropogate(expectedOutput);
+			if (!std::isnan(loss)) {
+				BackPropogate(expectedOutput);
+
+				totalLoss += loss;
+			}
 		}
+
+		const auto endTime = std::chrono::steady_clock::now();
+		const std::chrono::duration<double> elapsedTime = endTime - startTime;
+
+		std::cout << "Fitting " << elapsedTime << " - Loss: " << totalLoss / static_cast<float>(trainInput.size()) << "\n";
 
 		for (size_t n = 0; n < validationInput.size(); n++) {
 

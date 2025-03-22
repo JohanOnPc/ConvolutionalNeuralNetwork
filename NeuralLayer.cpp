@@ -27,11 +27,16 @@ void NeuralLayer::ReLu(NeuralLayer* NL)
 
 void NeuralLayer::ReLuDerivative(NeuralLayer* NL)
 {
-    
+    for (size_t i = 0; i < NL->outputs.size(); i++) {
+        NL->outputGradients[i] *= (NL->outputs[i] > 0.f);
+    }
 }
 
 void NeuralLayer::SoftMax(NeuralLayer* NL)
 {
+    auto max = std::max_element(NL->outputs.cbegin(), NL->outputs.cend());
+    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [max](float Z) {return Z - *max; });
+
     float sum = std::accumulate(NL->outputs.cbegin(), NL->outputs.cend(), 0.f, [](float acc, float Z) {return acc + std::expf(Z); });
 
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [&sum](float Z) {return std::expf(Z) / sum; });
@@ -88,6 +93,8 @@ void Convolution::Create(NeuralLayer* previousLayer)
     outputs.reserve(outputWidth * outputHeight * outputChannels);
     outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
     kernelWeights.reserve(kernelAmount * previousLayer->outputChannels * kernelSize * kernelSize);
+
+    outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.f);
 
     InitWeights(biasWeights, kernelAmount,kernelSize * kernelSize);
     InitWeights(kernelWeights, kernelSize * kernelSize * kernelAmount, kernelSize * kernelSize);
@@ -159,6 +166,8 @@ void MaxPooling::Create(NeuralLayer* previousLayer)
     outputs.assign(outputWidth * outputHeight * outputChannels, 0.0f);
     maxIndexes.reserve(outputWidth * outputHeight * outputChannels);
     maxIndexes.assign(outputWidth * outputHeight * outputChannels, 0);
+
+    outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.f);
 }
 
 size_t MaxPooling::PrintStats() const
@@ -229,12 +238,13 @@ void FullyConnected::BackPropogate()
 {
     //Gradient with respect to the output after activation
     //Calculate the gradient with respect to the output based on the derivative of the used activation fucntion. 
+    ReLuDerivative(this);
 
     //Gradient with respect to the weights
 
     for (size_t k = 0; k < outputHeight; k++) {
         for (size_t j = 0; j < sizePreviousLayer; j++) {
-            weightGradients[k * outputHeight + j] = previousLayer->outputs[j] * outputGradients[k];
+            weightGradients[k * sizePreviousLayer + j] = previousLayer->outputs[j] * outputGradients[k];
         }
     }
 
@@ -253,6 +263,14 @@ void FullyConnected::BackPropogate()
         }
 
         previousLayer->outputGradients[j] = gradient;
+    }
+
+    for (size_t k = 0; k < outputHeight * sizePreviousLayer; k++) {
+        weights[k] -= learningRate * weightGradients[k];
+    }
+
+    for (size_t b = 0; b < outputHeight; b++) {
+        biasWeights[b] -= learningRate * biasGradients[b];
     }
 }
 
