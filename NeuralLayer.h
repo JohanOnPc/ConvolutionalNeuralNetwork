@@ -22,6 +22,7 @@ public:
     static void ReLuDerivative(NeuralLayer* NL);
     
     static void SoftMax(NeuralLayer* NL);
+    static void SoftMaxDerivative(NeuralLayer*);
 
     NeuralLayer(size_t width, size_t height, size_t channels) :
         outputWidth(width), outputHeight(height), outputChannels(channels) {}
@@ -29,9 +30,10 @@ public:
         outputWidth(0), outputHeight(0), outputChannels(0) { }
 
     void (*Activation)(NeuralLayer*) = nullptr;
+    void (*ActivationDerivative)(NeuralLayer*) = nullptr;
 
 protected:
-    float learningRate = 0.008f;
+    float learningRate = 0.003f;
 };
 
 class Input : public NeuralLayer
@@ -56,12 +58,12 @@ public:
     * After that comes the second row from the first kernel. After all the rows of the first kernel, 
     * comes the first row of the second kernel
     */
-    std::vector<float> kernelWeights;
+    std::vector<float> kernelWeights, kernelGradients;
 
     /*
     * The biases for the kernels are stored here, thus at the firs index, the bias from the first kernel is stored.
     */
-    std::vector<float> biasWeights;
+    std::vector<float> biasWeights, biasGradients;
 
     Convolution(size_t amount, size_t kernelSize, size_t padding = 0, size_t stride = 1, std::string ActivationFunction = "relu");
 

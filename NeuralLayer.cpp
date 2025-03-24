@@ -9,12 +9,15 @@
 
 void NeuralLayer::SetActivationFuction(std::string ActivationFunction)
 {
-    if (ActivationFunction == "relu")
+    if (ActivationFunction == "relu") {
         Activation = ReLu;
-    else if (ActivationFunction == "softmax")
+        ActivationDerivative = ReLuDerivative;
+    }
+    else if (ActivationFunction == "softmax") {
         Activation = SoftMax;
-    else
-    {
+        ActivationDerivative = SoftMaxDerivative;
+    }
+    else {
         std::cerr << "Given Activation function: '" << ActivationFunction << "' does not exists!\n Exiting!";
         exit(1);
     }
@@ -40,6 +43,10 @@ void NeuralLayer::SoftMax(NeuralLayer* NL)
     float sum = std::accumulate(NL->outputs.cbegin(), NL->outputs.cend(), 0.f, [](float acc, float Z) {return acc + std::expf(Z); });
 
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [&sum](float Z) {return std::expf(Z) / sum; });
+}
+
+void NeuralLayer::SoftMaxDerivative(NeuralLayer*)
+{
 }
 
 Input::Input(size_t width, size_t height, size_t channels) : 
@@ -80,6 +87,34 @@ void Convolution::FeedForward()
 
 void Convolution::BackPropogate()
 {
+    ActivationDerivative(this);
+
+    //Gradient with respect to the weights
+
+    //Gradient with respect to the bias
+    
+
+    for (size_t k = 0; k < kernelAmount; k++) {
+        float biasGradient = 0.f;
+
+        for (size_t i = 0; i < outputWidth * outputHeight; i++) {
+            biasGradient += outputGradients[k * outputHeight * outputWidth + i];
+        }
+
+        biasGradients[k] = biasGradient;
+    }
+
+    //Gradient with respect to the input
+
+    //update all the weights based upon the gradients
+
+    for (size_t i = 0; i < kernelWeights.size(); i++) {
+        kernelWeights[i] -= learningRate * kernelGradients[i];
+    }
+
+    for (size_t k = 0; k < kernelAmount; k++) {
+        biasWeights[k] -= learningRate * biasGradients[k];
+    }
 }
 
 void Convolution::Create(NeuralLayer* previousLayer)
@@ -95,8 +130,10 @@ void Convolution::Create(NeuralLayer* previousLayer)
     kernelWeights.reserve(kernelAmount * previousLayer->outputChannels * kernelSize * kernelSize);
 
     outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.f);
+    kernelGradients.assign(kernelAmount * previousLayer->outputChannels * kernelSize * kernelSize, 0.f);
+    biasGradients.assign(kernelAmount, 0.f);
 
-    InitWeights(biasWeights, kernelAmount,kernelSize * kernelSize);
+    InitWeights(biasWeights, kernelAmount, kernelSize * kernelSize);
     InitWeights(kernelWeights, kernelSize * kernelSize * kernelAmount, kernelSize * kernelSize);
 }
 
@@ -247,7 +284,7 @@ void FullyConnected::BackPropogate()
 {
     //Gradient with respect to the output after activation
     //Calculate the gradient with respect to the output based on the derivative of the used activation fucntion. 
-    ReLuDerivative(this);
+    ActivationDerivative(this);
 
     //Gradient with respect to the weights
 
@@ -274,6 +311,8 @@ void FullyConnected::BackPropogate()
         previousLayer->outputGradients[j] = gradient;
     }
 
+
+    //update all the weights based upon the gradients
     for (size_t k = 0; k < outputHeight * sizePreviousLayer; k++) {
         weights[k] -= learningRate * weightGradients[k];
     }
