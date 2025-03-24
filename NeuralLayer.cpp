@@ -9,10 +9,18 @@
 
 void NeuralLayer::SetActivationFuction(std::string ActivationFunction)
 {
-    if (ActivationFunction == "relu")
+    if (ActivationFunction == "relu") {
         Activation = ReLu;
-    else if (ActivationFunction == "softmax")
+        ActivationDerivative = ReLuDerivative;
+    }
+    else if (ActivationFunction == "softmax") {
         Activation = SoftMax;
+        ActivationDerivative = SoftMaxDerivative;
+    }
+    else if (ActivationFunction == "leakyrelu") {
+        Activation = LeakyReLu;
+        ActivationDerivative = LeakyReLuDerivative;
+    }
     else
     {
         std::cerr << "Given Activation function: '" << ActivationFunction << "' does not exists!\n Exiting!";
@@ -25,10 +33,22 @@ void NeuralLayer::ReLu(NeuralLayer* NL)
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [](float Z) {return std::max(0.f, Z); });
 }
 
+void NeuralLayer::LeakyReLu(NeuralLayer* NL)
+{
+    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [](float Z) {return std::max(0.1f * Z, Z); });
+}
+
 void NeuralLayer::ReLuDerivative(NeuralLayer* NL)
 {
     for (size_t i = 0; i < NL->outputs.size(); i++) {
         NL->outputGradients[i] *= (NL->outputs[i] > 0.f);
+    }
+}
+
+void NeuralLayer::LeakyReLuDerivative(NeuralLayer* NL)
+{
+    for (size_t i = 0; i < NL->outputs.size(); i++) {
+        NL->outputGradients[i] *= ((NL->outputs[i] > 0.f) + (NL->outputs[i] <= 0.f) * 0.1f);
     }
 }
 
@@ -40,6 +60,10 @@ void NeuralLayer::SoftMax(NeuralLayer* NL)
     float sum = std::accumulate(NL->outputs.cbegin(), NL->outputs.cend(), 0.f, [](float acc, float Z) {return acc + std::expf(Z); });
 
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [&sum](float Z) {return std::expf(Z) / sum; });
+}
+
+void NeuralLayer::SoftMaxDerivative(NeuralLayer* NL)
+{
 }
 
 Input::Input(size_t width, size_t height, size_t channels) : 
@@ -247,7 +271,7 @@ void FullyConnected::BackPropogate()
 {
     //Gradient with respect to the output after activation
     //Calculate the gradient with respect to the output based on the derivative of the used activation fucntion. 
-    ReLuDerivative(this);
+    ActivationDerivative(this);
 
     //Gradient with respect to the weights
 
