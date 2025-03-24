@@ -17,7 +17,12 @@ void NeuralLayer::SetActivationFuction(std::string ActivationFunction)
         Activation = SoftMax;
         ActivationDerivative = SoftMaxDerivative;
     }
-    else {
+    else if (ActivationFunction == "leakyrelu") {
+        Activation = LeakyReLu;
+        ActivationDerivative = LeakyReLuDerivative;
+    }
+    else
+    {
         std::cerr << "Given Activation function: '" << ActivationFunction << "' does not exists!\n Exiting!";
         exit(1);
     }
@@ -28,10 +33,22 @@ void NeuralLayer::ReLu(NeuralLayer* NL)
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [](float Z) {return std::max(0.f, Z); });
 }
 
+void NeuralLayer::LeakyReLu(NeuralLayer* NL)
+{
+    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [](float Z) {return std::max(0.1f * Z, Z); });
+}
+
 void NeuralLayer::ReLuDerivative(NeuralLayer* NL)
 {
     for (size_t i = 0; i < NL->outputs.size(); i++) {
         NL->outputGradients[i] *= (NL->outputs[i] > 0.f);
+    }
+}
+
+void NeuralLayer::LeakyReLuDerivative(NeuralLayer* NL)
+{
+    for (size_t i = 0; i < NL->outputs.size(); i++) {
+        NL->outputGradients[i] *= ((NL->outputs[i] > 0.f) + (NL->outputs[i] <= 0.f) * 0.1f);
     }
 }
 
@@ -45,7 +62,7 @@ void NeuralLayer::SoftMax(NeuralLayer* NL)
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [&sum](float Z) {return std::expf(Z) / sum; });
 }
 
-void NeuralLayer::SoftMaxDerivative(NeuralLayer*)
+void NeuralLayer::SoftMaxDerivative(NeuralLayer* NL)
 {
 }
 

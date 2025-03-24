@@ -19,10 +19,13 @@ public:
     void SetActivationFuction(std::string ActivationFunction);
 
     static void ReLu(NeuralLayer *NL);
+    static void LeakyReLu(NeuralLayer* NL);
+
     static void ReLuDerivative(NeuralLayer* NL);
+    static void LeakyReLuDerivative(NeuralLayer* NL);
     
     static void SoftMax(NeuralLayer* NL);
-    static void SoftMaxDerivative(NeuralLayer*);
+    static void SoftMaxDerivative(NeuralLayer* NL);
 
     NeuralLayer(size_t width, size_t height, size_t channels) :
         outputWidth(width), outputHeight(height), outputChannels(channels) {}
