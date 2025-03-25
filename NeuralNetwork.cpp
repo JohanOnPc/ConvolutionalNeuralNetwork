@@ -69,7 +69,10 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 	}
 
 	for (size_t epoch = 0; epoch < epochs; epoch++) {
-		float totalLoss = 0.f;
+		float totalLoss = 0.f, totalValidationLoss = 0.f;
+		size_t NaNs = 0;
+
+		size_t trainCorrect = 0, validationCorrect = 0;
 
 		std::cout << "Epoch " << epoch + 1 << "/" << epochs << '\n';
 		const auto startTime = std::chrono::steady_clock::now();
@@ -80,22 +83,38 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 
 			auto expectedOutput = LabelToOneHotEncoding(trainLabels[n], Layers.back()->outputHeight);
 
+			if (std::distance(Layers.back()->outputs.begin(), std::ranges::max_element(Layers.back()->outputs)) == trainLabels[n])
+				trainCorrect++;
+
 			float loss = CrossEntropyLoss(expectedOutput, Layers.back()->outputs);
 			if (!std::isnan(loss)) {
 				BackPropogate(expectedOutput);
 
 				totalLoss += loss;
 			}
+			else
+				NaNs++;
 		}
 
 		const auto endTime = std::chrono::steady_clock::now();
 		const std::chrono::duration<double> elapsedTime = endTime - startTime;
 
-		std::cout << "Fitting " << elapsedTime << " - Loss: " << totalLoss / static_cast<float>(trainInput.size()) << "\n";
+		std::cout << "  Fitting " << elapsedTime << " - Loss: " << totalLoss / static_cast<float>(trainInput.size()) << " - Accuracy : " << (static_cast<float>(trainCorrect) / static_cast<float>(trainInput.size())) * 100.f << " % -NaNs : " << NaNs << "\n";
 
 		for (size_t n = 0; n < validationInput.size(); n++) {
+			auto prediction = Predict(validationInput[n]);
+			auto expectedOutput = LabelToOneHotEncoding(validationLabels[n], Layers.back()->outputHeight);
 
+			if (std::distance(Layers.back()->outputs.begin(), std::ranges::max_element(Layers.back()->outputs)) == validationLabels[n])
+				validationCorrect++;
+
+			float loss = CrossEntropyLoss(expectedOutput, prediction);
+
+			totalValidationLoss += loss;
 		}
+
+		std::cout << "  Validation - Loss: " << totalValidationLoss / static_cast<float>(validationInput.size()) << " - Accuracy : " << (static_cast<float>(validationCorrect) / static_cast<float>(validationInput.size())) * 100.f << " % \n";
+
 	}
 }
 

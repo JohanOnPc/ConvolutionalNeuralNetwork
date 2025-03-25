@@ -39,7 +39,7 @@ float CrossEntropyLoss(const std::vector<float>& expected, const std::vector<flo
 	float error = 0.f;
 
 	for (size_t i = 0; i < expected.size(); i++) {
-		error += expected[i] * std::logf(output[i]);
+		error += expected[i] * std::logf(output[i] + 1E-12f);
 	}
 
 	return -error;

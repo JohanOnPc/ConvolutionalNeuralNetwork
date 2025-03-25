@@ -36,7 +36,7 @@ public:
     void (*ActivationDerivative)(NeuralLayer*) = nullptr;
 
 protected:
-    float learningRate = 0.003f;
+    float learningRate = 0.00001f;
 };
 
 class Input : public NeuralLayer
@@ -46,7 +46,7 @@ public:
 
     void FeedForward() {};
     void BackPropogate() {};
-    void Create(NeuralLayer *previousLayer) {};
+    void Create(NeuralLayer* previousLayer) { outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.0f); };
     size_t PrintStats() const;
 };
 
@@ -77,6 +77,7 @@ public:
 
 private:
     float CrossCorrelation(size_t beginX, size_t beginY, size_t kernel = 0) const;
+    float WeightGradient(size_t beginX, size_t beginY, size_t kernel, size_t channel) const;
 };
 
 class MaxPooling : public NeuralLayer

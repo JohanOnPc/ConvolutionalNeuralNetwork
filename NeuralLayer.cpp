@@ -55,9 +55,11 @@ void NeuralLayer::LeakyReLuDerivative(NeuralLayer* NL)
 void NeuralLayer::SoftMax(NeuralLayer* NL)
 {
     auto max = std::max_element(NL->outputs.cbegin(), NL->outputs.cend());
-    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [max](float Z) {return Z - *max; });
+    std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [max](float Z) {return std::clamp(Z - *max, -80.f, 50.f); });
 
     float sum = std::accumulate(NL->outputs.cbegin(), NL->outputs.cend(), 0.f, [](float acc, float Z) {return acc + std::expf(Z); });
+
+    sum = std::max(sum, 1E-12f);
 
     std::transform(NL->outputs.begin(), NL->outputs.end(), NL->outputs.begin(), [&sum](float Z) {return std::expf(Z) / sum; });
 }
@@ -108,6 +110,17 @@ void Convolution::BackPropogate()
 
     //Gradient with respect to the weights
 
+    for (size_t kernel = 0; kernel < kernelAmount; kernel++) {
+        for (size_t channel = 0; channel < previousLayer->outputChannels; channel++) {
+            for (size_t y = 0; y < kernelSize; y++) {
+                for (size_t x = 0; x < kernelSize; x++) {
+                    float gradient = WeightGradient(x, y, kernel, channel);
+                    kernelGradients[kernel * previousLayer->outputChannels * kernelSize * kernelSize + channel * kernelSize * kernelSize + y * kernelSize + x] = gradient;
+                }
+            }
+        }
+    }
+
     //Gradient with respect to the bias
     
 
@@ -151,7 +164,7 @@ void Convolution::Create(NeuralLayer* previousLayer)
     biasGradients.assign(kernelAmount, 0.f);
 
     InitWeights(biasWeights, kernelAmount, kernelSize * kernelSize);
-    InitWeights(kernelWeights, kernelSize * kernelSize * kernelAmount, kernelSize * kernelSize);
+    InitWeights(kernelWeights, kernelSize * kernelSize * kernelAmount * previousLayer->outputChannels, kernelSize * kernelSize);
 }
 
 size_t Convolution::PrintStats() const
@@ -170,8 +183,8 @@ size_t Convolution::PrintStats() const
 */
 float Convolution::CrossCorrelation(size_t beginX, size_t beginY, size_t kernel) const
 {
-    size_t kernelBase = kernel * kernelSize * kernelSize;
-    float sum = 0;
+    /*size_t kernelBase = kernel * kernelSize * kernelSize;
+    float sum = 0.f;
     for (size_t k = 0; k < previousLayer->outputChannels; k++) {
         for (size_t y = 0; y < kernelSize; y++) {
             size_t Y = y + beginY;
@@ -182,6 +195,44 @@ float Convolution::CrossCorrelation(size_t beginX, size_t beginY, size_t kernel)
                 float weight = kernelWeights[kernelBase + y * kernelSize + x];
                 sum += input * weight;
             }
+        }
+    }*/
+
+    float sum = 0.f;
+    size_t kernelBase = kernel * kernelSize * kernelSize * previousLayer->outputChannels;
+
+    for (size_t k = 0; k < previousLayer->outputChannels; k++) {
+        size_t channelBase = k * previousLayer->outputWidth * previousLayer->outputHeight;
+
+        for (size_t y = 0; y < kernelSize; y++) {
+            size_t inputY = beginY + y;
+
+            for (size_t x = 0; x < kernelSize; x++) {
+                size_t inputX = beginX + x;
+
+                float input = previousLayer->outputs[channelBase + inputY * previousLayer->outputWidth + inputX];
+                float weight = kernelWeights[kernelBase + k * kernelSize * kernelSize + y * kernelSize + x];
+                sum += input * weight;
+            }
+        }
+    }
+
+    return sum;
+}
+
+/*
+* Calculates the weight gradient for the given weight using the local x, y and kernel coordinates. The channel coordinate gives the output channel of the previous layer.
+*/
+float Convolution::WeightGradient(size_t beginX, size_t beginY, size_t kernel, size_t channel) const
+{
+    float sum = 0.f;
+
+    for (size_t y = 0; y < outputHeight; y++) {
+        for (size_t x = 0; x < outputWidth; x++) {
+            float input = previousLayer->outputs[channel * previousLayer->outputWidth * previousLayer->outputHeight + (beginY + y) * previousLayer->outputWidth + (beginX + x)];
+            float outputGradient = outputGradients[kernel * outputWidth * outputHeight + y * outputWidth + x];
+
+            sum += input * outputGradient;
         }
     }
 
