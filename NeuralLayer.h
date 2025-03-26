@@ -35,8 +35,7 @@ public:
     void (*Activation)(NeuralLayer*) = nullptr;
     void (*ActivationDerivative)(NeuralLayer*) = nullptr;
 
-protected:
-    float learningRate = 0.00001f;
+    float learningRate = 0.000015f;
 };
 
 class Input : public NeuralLayer

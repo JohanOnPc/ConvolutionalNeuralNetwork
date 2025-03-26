@@ -24,14 +24,18 @@ std::vector<float> NeuralNetwork::Predict(const std::vector<float>& Input)
 	return Layers.back()->outputs;
 }
 
-void NeuralNetwork::Create()
+void NeuralNetwork::Create(float learningRate, float decayRate)
 {
 	NeuralLayer* previousLayer = nullptr;
 	for (auto& layer : Layers)
 	{
 		layer->Create(previousLayer);
 		previousLayer = layer;
+		layer->learningRate = learningRate;
 	}
+
+	this->learningRate = learningRate;
+	this->decayRate = decayRate;
 }
 
 void NeuralNetwork::PrintSummary() const
@@ -74,7 +78,7 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 
 		size_t trainCorrect = 0, validationCorrect = 0;
 
-		std::cout << "Epoch " << epoch + 1 << "/" << epochs << '\n';
+		std::cout << "Epoch " << epoch + 1 << "/" << epochs << " - Learning Rate: " << learningRate << '\n';
 		const auto startTime = std::chrono::steady_clock::now();
 
 		for (size_t n = 0; n < trainInput.size(); n++) {
@@ -99,7 +103,7 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 		const auto endTime = std::chrono::steady_clock::now();
 		const std::chrono::duration<double> elapsedTime = endTime - startTime;
 
-		std::cout << "  Fitting " << elapsedTime << " - Loss: " << totalLoss / static_cast<float>(trainInput.size()) << " - Accuracy : " << (static_cast<float>(trainCorrect) / static_cast<float>(trainInput.size())) * 100.f << " % -NaNs : " << NaNs << "\n";
+		std::cout << "  Fitting " << elapsedTime << " - Loss: " << totalLoss / static_cast<float>(trainInput.size()) << " - Accuracy : " << (static_cast<float>(trainCorrect) / static_cast<float>(trainInput.size())) * 100.f << " % - NaNs : " << NaNs << "\n";
 
 		for (size_t n = 0; n < validationInput.size(); n++) {
 			auto prediction = Predict(validationInput[n]);
@@ -115,7 +119,17 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 
 		std::cout << "  Validation - Loss: " << totalValidationLoss / static_cast<float>(validationInput.size()) << " - Accuracy : " << (static_cast<float>(validationCorrect) / static_cast<float>(validationInput.size())) * 100.f << " % \n";
 
+
+		//Update learning rate based on the decay rate
+
+		learningRate /= (1.f + decayRate);
 	}
+}
+
+void NeuralNetwork::SetLearningRate(float learningRate) const
+{
+	for (auto& layer : Layers)
+		layer->learningRate = learningRate;
 }
 
 void NeuralNetwork::BackPropogate(const std::vector<float>& expected)

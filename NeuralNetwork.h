@@ -10,6 +10,8 @@ class NeuralNetwork
 {
 private:
     std::vector<NeuralLayer*> Layers;
+    float learningRate{};
+    float decayRate{};
     
 public:
     NeuralNetwork() {}
@@ -19,10 +21,12 @@ public:
 
     std::vector<float> Predict(const std::vector<float> &Input);
 
-    void Create();
+    void Create(float learningRate = 0.000015f, float decayRate = 0.f);
     void PrintSummary() const;
     void Fit(size_t epochs, const struct dataSet& dataSet);
     void Fit(size_t epochs, const std::vector<std::vector<float>>& trainInput, const std::vector<size_t>& trainLabels, const std::vector<std::vector<float>>& validationInput, const std::vector<size_t>& validationLabels);
+
+    void SetLearningRate(float learningRate) const;
 
 private:
     void BackPropogate(const std::vector<float>& expected);

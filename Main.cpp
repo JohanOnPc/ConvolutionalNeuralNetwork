@@ -24,7 +24,7 @@ int main()
     model->AddLayer(new FullyConnected(64, "relu"));
     model->AddLayer(new FullyConnected(10, "softmax"));
 
-    model->Create();
+    model->Create(3E-5f, 0.1f);
     model->PrintSummary();
 
     dataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
