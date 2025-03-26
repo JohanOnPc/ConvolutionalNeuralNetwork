@@ -56,9 +56,9 @@ public:
 
     /*
     * The kernelweights consists of all the weights used by all the kernels in this layer.
-    * It is stored in memory in rows, thus the first row that is stored, is the first row of the first kernel,
-    * After that comes the second row from the first kernel. After all the rows of the first kernel, 
-    * comes the first row of the second kernel
+    * It is stored in memory in rows, thus the first row that is stored, is the first row of the first channel of the first kernel,
+    * After that comes the second row from the first kernel. Then the rows follow from the second channel and first kernel. 
+    * After all the rows and channels of the first kernel, comes the first row of the second kernel
     */
     std::vector<float> kernelWeights, kernelGradients;
 
@@ -77,6 +77,8 @@ public:
 private:
     float CrossCorrelation(size_t beginX, size_t beginY, size_t kernel = 0) const;
     float WeightGradient(size_t beginX, size_t beginY, size_t kernel, size_t channel) const;
+    inline float CalculateInputGradient(size_t c, size_t x, size_t y) const;
+    inline float GetOutputGradientForBackPropogate(size_t x, size_t y) const;
 };
 
 class MaxPooling : public NeuralLayer

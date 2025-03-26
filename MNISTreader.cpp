@@ -4,7 +4,7 @@
 #include <iostream>
 #include <bit>
 
-dataSet ReadMNISTDataSet(const std::string& trainData, const std::string& trainLabels, const std::string& validationData, const std::string& validationLabels)
+DataSet ReadMNISTDataSet(const std::string& trainData, const std::string& trainLabels, const std::string& validationData, const std::string& validationLabels)
 {
     auto trainSet = ReadIDXFileData(trainData);
     auto trainLabel = ReadIDXFileLabels(trainLabels);

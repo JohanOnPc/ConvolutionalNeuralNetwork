@@ -50,7 +50,7 @@ void NeuralNetwork::PrintSummary() const
 	std::cout << "Total Trainable params: " << totalParams << '\n';
 }
 
-void NeuralNetwork::Fit(size_t epochs, const dataSet& dataSet)
+void NeuralNetwork::Fit(size_t epochs, const DataSet& dataSet)
 {
 	Fit(epochs, dataSet.trainInput, dataSet.trainLabels, dataSet.validationInput, dataSet.validationLabels);
 }

@@ -135,6 +135,15 @@ void Convolution::BackPropogate()
     }
 
     //Gradient with respect to the input
+    for (size_t c = 0; c < previousLayer->outputChannels; c++) {
+        for (size_t y = 0; y < previousLayer->outputHeight; y++) {
+            for (size_t x = 0; x < previousLayer->outputWidth; x++) {
+                float inputGradient = CalculateInputGradient(c, x, y);
+
+                previousLayer->outputGradients[c * previousLayer->outputWidth * previousLayer->outputHeight + y * previousLayer->outputWidth + x] = inputGradient;
+            }
+        }
+    }
 
     //update all the weights based upon the gradients
 
@@ -237,6 +246,38 @@ float Convolution::WeightGradient(size_t beginX, size_t beginY, size_t kernel, s
     }
 
     return sum;
+}
+
+inline float Convolution::CalculateInputGradient(size_t c, size_t x, size_t y) const
+{
+    size_t pad = kernelSize - 1 - padding;  //logical padding around the output gradients in all directions
+    size_t deltaPad = (previousLayer->outputWidth - outputWidth) / 2; //Difference in padding between the input and output
+    float gradient = 0.f;
+
+    auto kernelChunks = kernelWeights | std::views::chunk(kernelSize * kernelSize);
+
+    for (size_t k = 0; k < kernelAmount; k++) {
+        auto rotatedKernelWeights = std::views::reverse(kernelChunks[k * previousLayer->outputChannels + c]);
+
+        for (size_t localY = std::max(pad - y, 0ull); localY < std::min(kernelSize, previousLayer->outputHeight - y); localY++) {
+            for (size_t localX = std::max(pad - x, 0ull); localX < std::min(kernelSize, previousLayer->outputWidth - x); localX++) {
+                float kernelWeight = rotatedKernelWeights[y * kernelSize + x];
+                size_t outputX = localX + x - pad;
+                size_t outputY = localY + y - pad;
+                float outputGradient = outputGradients[k * outputWidth * outputHeight + outputY * outputWidth + outputX];
+                gradient += kernelWeight * outputGradient;
+            }
+        }
+    }
+
+    return gradient;
+}
+
+inline float Convolution::GetOutputGradientForBackPropogate(size_t x, size_t y) const
+{
+
+
+    return 0.0f;
 }
 
 MaxPooling::MaxPooling(size_t poolSize) :
