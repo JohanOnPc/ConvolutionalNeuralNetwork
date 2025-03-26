@@ -256,11 +256,11 @@ inline float Convolution::CalculateInputGradient(size_t c, size_t x, size_t y) c
 
     auto kernelChunks = kernelWeights | std::views::chunk(kernelSize * kernelSize);
 
-    for (size_t k = 0; k < kernelAmount; k++) {
+    for (size_t k = 0; k < 1; k++) {
         auto rotatedKernelWeights = std::views::reverse(kernelChunks[k * previousLayer->outputChannels + c]);
 
-        for (size_t localY = std::max(pad - y, 0ull); localY < std::min(kernelSize, previousLayer->outputHeight - y); localY++) {
-            for (size_t localX = std::max(pad - x, 0ull); localX < std::min(kernelSize, previousLayer->outputWidth - x); localX++) {
+        for (size_t localY = std::max(pad > y ? pad - y : 0ull, 0ull); localY < std::min(kernelSize, previousLayer->outputHeight - y); localY++) {
+            for (size_t localX = std::max(pad > x ? pad - x : 0ull, 0ull); localX < std::min(kernelSize, previousLayer->outputWidth - x); localX++) {
                 float kernelWeight = rotatedKernelWeights[y * kernelSize + x];
                 size_t outputX = localX + x - pad;
                 size_t outputY = localY + y - pad;
@@ -275,8 +275,6 @@ inline float Convolution::CalculateInputGradient(size_t c, size_t x, size_t y) c
 
 inline float Convolution::GetOutputGradientForBackPropogate(size_t x, size_t y) const
 {
-
-
     return 0.0f;
 }
 
