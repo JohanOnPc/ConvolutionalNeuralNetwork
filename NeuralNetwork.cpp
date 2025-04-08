@@ -2,6 +2,7 @@
 #include "common.h"
 
 #include <iostream>
+#include <fstream>
 #include <ranges>
 #include <chrono>
 
@@ -130,6 +131,25 @@ void NeuralNetwork::SetLearningRate(float learningRate) const
 {
 	for (auto& layer : Layers)
 		layer->learningRate = learningRate;
+}
+
+void NeuralNetwork::SaveModel(const std::string& fileName) const
+{
+	std::ofstream file(fileName, std::ios::binary | std::fstream::out);
+
+	if (file.is_open()) {
+		size_t size =  Layers.size();
+		file.write((const char*)&size, sizeof(size));
+
+		for (const auto& layer : Layers)
+			layer->SaveLayer(file);
+	} 
+	else {
+		std::cout << "Error, could not create file named: " << fileName;
+		exit(1);
+	}
+
+	file.close();
 }
 
 void NeuralNetwork::BackPropogate(const std::vector<float>& expected)

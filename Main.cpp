@@ -30,7 +30,9 @@ int main()
 
     DataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
 
-    model->Fit(20, _dataSet);
+    model->Fit(0, _dataSet);
+
+    model->SaveModel("model.txt");
 
     return 0;
 }

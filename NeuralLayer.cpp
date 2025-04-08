@@ -26,6 +26,8 @@ void NeuralLayer::SetActivationFuction(std::string ActivationFunction)
         std::cerr << "Given Activation function: '" << ActivationFunction << "' does not exists!\n Exiting!";
         exit(1);
     }
+
+    this->ActivationFunction = ActivationFunction;
 }
 
 void NeuralLayer::ReLu(NeuralLayer* NL)
@@ -68,10 +70,22 @@ void NeuralLayer::SoftMaxDerivative(NeuralLayer* NL)
 {
 }
 
+void NeuralLayer::SaveLayer(std::ofstream& file) const
+{
+    if (file.is_open()) {
+        file.write((const char*)&layerType, sizeof(layerType));
+
+        file.write((const char*)&outputChannels, sizeof(outputChannels));
+        file.write((const char*)&outputHeight, sizeof(outputHeight));
+        file.write((const char*)&outputWidth, sizeof(outputWidth));
+    }
+}
+
 Input::Input(size_t width, size_t height, size_t channels) : 
     NeuralLayer(width, height, channels)
 {
     outputs.reserve(width * height * channels);
+    layerType = LayerTypes::InputLayer;
 }
 
 size_t Input::PrintStats() const
@@ -87,6 +101,8 @@ Convolution::Convolution(size_t amount, size_t kernelSize, size_t padding, size_
     biasWeights.reserve(amount);
 
     SetActivationFuction(ActivationFunction);
+
+    layerType = LayerTypes::ConvolutionLayer;
 }
 
 void Convolution::FeedForward()
@@ -185,6 +201,29 @@ size_t Convolution::PrintStats() const
     return params;
 }
 
+void Convolution::SaveLayer(std::ofstream& file) const
+{
+    NeuralLayer::SaveLayer(file);
+
+    file << ActivationFunction << '\0';
+
+    file.write((const char*)&kernelSize, sizeof(kernelSize));
+    file.write((const char*)&kernelAmount, sizeof(kernelAmount));
+    file.write((const char*)&padding, sizeof(padding));
+
+    size_t size = kernelWeights.size();
+    file.write((const char*)&size, sizeof(size));
+
+    for (const auto& weight : kernelWeights)
+        file.write((const char*)&weight, sizeof(weight));
+
+    size = biasWeights.size();
+    file.write((const char*)&size, sizeof(size));
+
+    for (const auto& weight : biasWeights)
+        file.write((const char*)&weight, sizeof(weight));
+}
+
 
 /*
 * Cross Corelates the kernel given by the index, with the previous layer's output based upon
@@ -256,12 +295,12 @@ inline float Convolution::CalculateInputGradient(size_t c, size_t x, size_t y) c
 
     auto kernelChunks = kernelWeights | std::views::chunk(kernelSize * kernelSize);
 
-    for (size_t k = 0; k < 1; k++) {
+    for (size_t k = 0; k < kernelAmount; k++) {
         auto rotatedKernelWeights = std::views::reverse(kernelChunks[k * previousLayer->outputChannels + c]);
 
         for (size_t localY = std::max(pad > y ? pad - y : 0ull, 0ull); localY < std::min(kernelSize, previousLayer->outputHeight - y); localY++) {
             for (size_t localX = std::max(pad > x ? pad - x : 0ull, 0ull); localX < std::min(kernelSize, previousLayer->outputWidth - x); localX++) {
-                float kernelWeight = rotatedKernelWeights[y * kernelSize + x];
+                float kernelWeight = rotatedKernelWeights[localY * kernelSize + localX];
                 size_t outputX = localX + x - pad;
                 size_t outputY = localY + y - pad;
                 float outputGradient = outputGradients[k * outputWidth * outputHeight + outputY * outputWidth + outputX];
@@ -281,6 +320,7 @@ inline float Convolution::GetOutputGradientForBackPropogate(size_t x, size_t y) 
 MaxPooling::MaxPooling(size_t poolSize) :
     poolingSize(poolSize)
 {
+    layerType = LayerTypes::MaxPoolingLayer;
 }
 
 void MaxPooling::FeedForward()
@@ -328,6 +368,15 @@ size_t MaxPooling::PrintStats() const
     return 0;
 }
 
+void MaxPooling::SaveLayer(std::ofstream& file) const
+{
+    if (file.is_open()) {
+        NeuralLayer::SaveLayer(file);
+
+        file << poolingSize;
+    }
+}
+
 /*
 * Calcules the max value based upon the previous layer's output. 
 * the i, j, and k values are given for this layer itself.
@@ -368,6 +417,8 @@ FullyConnected::FullyConnected(size_t outputSize, std::string ActivationFunction
     biasWeights.reserve(outputSize);
 
     SetActivationFuction(ActivationFunction);
+
+    layerType = LayerTypes::FullyConnectedLayer;
 }
 
 void FullyConnected::FeedForward()
@@ -452,4 +503,25 @@ size_t FullyConnected::PrintStats() const
     std::cout << std::format("FullyConnected [{}] {}\n", outputHeight, params);
 
     return params;
+}
+
+void FullyConnected::SaveLayer(std::ofstream& file) const
+{
+    if (file.is_open()) {
+        NeuralLayer::SaveLayer(file);
+
+        file << ActivationFunction << '\0';
+
+        size_t size = weights.size();
+        file.write((const char*)&size, sizeof(size_t));
+
+        for (const auto& weight : weights)
+            file.write((const char*)&weight, sizeof(weight));
+
+        size = biasWeights.size();
+        file.write((const char*)&size, sizeof(size_t));
+
+        for (const auto& weight : biasWeights)
+            file.write((const char*)&weight, sizeof(weight));
+    }
 }

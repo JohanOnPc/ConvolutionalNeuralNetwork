@@ -2,6 +2,9 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
+
+enum LayerTypes {BaseLayer, InputLayer, ConvolutionLayer, MaxPoolingLayer, FullyConnectedLayer};
 
 class NeuralLayer
 {
@@ -27,6 +30,8 @@ public:
     static void SoftMax(NeuralLayer* NL);
     static void SoftMaxDerivative(NeuralLayer* NL);
 
+    virtual void SaveLayer(std::ofstream& file) const;;
+
     NeuralLayer(size_t width, size_t height, size_t channels) :
         outputWidth(width), outputHeight(height), outputChannels(channels) {}
     NeuralLayer() :
@@ -36,6 +41,9 @@ public:
     void (*ActivationDerivative)(NeuralLayer*) = nullptr;
 
     float learningRate = 0.000015f;
+
+    uint8_t layerType = BaseLayer;
+    std::string ActivationFunction;
 };
 
 class Input : public NeuralLayer
@@ -74,6 +82,8 @@ public:
     void Create(NeuralLayer* previousLayer);
     size_t PrintStats() const;
 
+    void SaveLayer(std::ofstream& file) const;
+
 private:
     float CrossCorrelation(size_t beginX, size_t beginY, size_t kernel = 0) const;
     float WeightGradient(size_t beginX, size_t beginY, size_t kernel, size_t channel) const;
@@ -92,6 +102,8 @@ public:
     void BackPropogate();
     void Create(NeuralLayer* previousLayer);
     size_t PrintStats() const;
+
+    void SaveLayer(std::ofstream& file) const;
 
 private:
     void Max(size_t i, size_t j, size_t k);
@@ -119,6 +131,8 @@ public:
     void BackPropogate();
     void Create(NeuralLayer* previousLayer);
     size_t PrintStats() const;
+
+    void SaveLayer(std::ofstream& file) const;
 
 private:
     size_t sizePreviousLayer = 0;
