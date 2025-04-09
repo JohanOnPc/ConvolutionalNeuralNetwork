@@ -34,5 +34,9 @@ int main()
 
     model->SaveModel("model.txt");
 
+    NeuralNetwork* model2 = new NeuralNetwork();
+
+    model2->LoadModel("model.txt");
+
     return 0;
 }

@@ -88,6 +88,24 @@ Input::Input(size_t width, size_t height, size_t channels) :
     layerType = LayerTypes::InputLayer;
 }
 
+Input::Input(std::ifstream& file)
+{
+    size_t outputChannels, outputHeight, outputWidth;
+
+    file.read((char*)&outputChannels, sizeof(outputChannels));
+    file.read((char*)&outputHeight, sizeof(outputHeight));
+    file.read((char*)&outputWidth, sizeof(outputWidth));
+
+    this->outputChannels = outputChannels;
+    this->outputHeight = outputHeight;
+    this->outputWidth = outputWidth;
+
+    outputs.reserve(outputWidth * outputHeight * outputChannels);
+    layerType = LayerTypes::InputLayer;
+
+    outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.0f);
+}
+
 size_t Input::PrintStats() const
 {
     std::cout << std::format("Input [{}, {}, {}]\n", outputWidth, outputHeight, outputChannels);
@@ -103,6 +121,67 @@ Convolution::Convolution(size_t amount, size_t kernelSize, size_t padding, size_
     SetActivationFuction(ActivationFunction);
 
     layerType = LayerTypes::ConvolutionLayer;
+}
+
+Convolution::Convolution(std::ifstream& file)
+{
+    size_t outputChannels, outputHeight, outputWidth, kernelSize, kernelAmount, padding;
+    std::string activationFunction;
+
+    file.read((char*)&outputChannels, sizeof(outputChannels));
+    file.read((char*)&outputHeight, sizeof(outputHeight));
+    file.read((char*)&outputWidth, sizeof(outputWidth));
+
+    file >> ActivationFunction;
+
+    file.read((char*)&kernelSize, sizeof(kernelSize));
+    file.read((char*)&kernelAmount, sizeof(kernelAmount));
+    file.read((char*)&padding, sizeof(padding));
+
+    this->outputChannels = outputChannels;
+    this->outputHeight = outputHeight;
+    this->outputWidth = outputWidth;
+
+    this->kernelSize = kernelSize;
+    this->kernelAmount = kernelAmount;
+    this->padding = padding;
+    stride = 0;
+
+    size_t size = 0;
+
+    //Read in the amount of kernel weights, and the initialize the weights with the stored weights.
+    file.read((char*)&size, sizeof(size));
+
+    kernelWeights.reserve(size);
+    kernelGradients.assign(size, 0.f);
+
+    for (int i = 0; i < size; i++) {
+        float weight;
+        file.read((char*)&weight, sizeof(weight));
+        this->kernelWeights.push_back(weight);
+    }
+
+    //Read in the amount of bias weights, and the initialize the weights with the stored weights.
+    file.read((char*)&size, sizeof(size));
+
+    biasWeights.reserve(size);
+    biasGradients.assign(size, 0.f);
+
+    for (int i = 0; i < size; i++) {
+        float weight;
+        file.read((char*)&weight, sizeof(weight));
+        this->biasWeights.push_back(weight);
+    }
+
+    outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.f);
+    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0);
+
+    SetActivationFuction(ActivationFunction);
+
+    outputs.reserve(outputWidth * outputHeight * outputChannels);
+    layerType = LayerTypes::ConvolutionLayer;
+
+    outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.0f);
 }
 
 void Convolution::FeedForward()

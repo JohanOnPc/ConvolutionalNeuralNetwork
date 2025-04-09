@@ -29,6 +29,7 @@ public:
     void SetLearningRate(float learningRate) const;
 
     void SaveModel(const std::string& fileName) const;
+    void LoadModel(const std::string& fileName);
 
 private:
     void BackPropogate(const std::vector<float>& expected);

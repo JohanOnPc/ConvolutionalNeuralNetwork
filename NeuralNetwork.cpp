@@ -152,6 +152,49 @@ void NeuralNetwork::SaveModel(const std::string& fileName) const
 	file.close();
 }
 
+void NeuralNetwork::LoadModel(const std::string& fileName)
+{
+	std::ifstream file(fileName, std::ios::binary | std::fstream::in);
+
+	if (file.is_open()) {
+		size_t size = 0;
+		file.read((char*)&size, sizeof(size));
+
+		for (int i = 0; i < size; i++) {
+			uint8_t layerType;
+			size_t outputChannels, outputHeight, outputWidth;
+
+			file.read((char*)&layerType, sizeof(layerType));
+
+			file.read((char*)&outputChannels, sizeof(outputChannels));
+			file.read((char*)&outputHeight, sizeof(outputHeight));
+			file.read((char*)&outputWidth, sizeof(outputWidth));
+
+			switch (layerType)
+			{
+			case InputLayer:
+				this->AddLayer(new Input(outputWidth, outputHeight, outputChannels));
+				break;
+			case ConvolutionLayer:
+				size_t kernelAmount, kernelSize, padding;
+				std::string activationFunction;
+
+				file >> activationFunction;
+
+				file.read((char*)&kernelSize, sizeof(kernelSize));
+				file.read((char*)&kernelAmount, sizeof(kernelAmount));
+				file.read((char*)&padding, sizeof(padding));
+
+				this->AddLayer(new Convolution(kernelAmount, kernelSize, padding, 1, activationFunction));
+			}
+					
+		}
+	}
+	else {
+		std::cout << "Error, could not open file named: " << fileName;
+	}
+}
+
 void NeuralNetwork::BackPropogate(const std::vector<float>& expected)
 {
 	for (size_t i = 0; i < expected.size(); i++)

@@ -30,7 +30,7 @@ public:
     static void SoftMax(NeuralLayer* NL);
     static void SoftMaxDerivative(NeuralLayer* NL);
 
-    virtual void SaveLayer(std::ofstream& file) const;;
+    virtual void SaveLayer(std::ofstream& file) const;
 
     NeuralLayer(size_t width, size_t height, size_t channels) :
         outputWidth(width), outputHeight(height), outputChannels(channels) {}
@@ -50,6 +50,7 @@ class Input : public NeuralLayer
 {
 public:
     Input(size_t width, size_t height, size_t channels);
+    Input(std::ifstream& file);
 
     void FeedForward() {};
     void BackPropogate() {};
@@ -76,6 +77,7 @@ public:
     std::vector<float> biasWeights, biasGradients;
 
     Convolution(size_t amount, size_t kernelSize, size_t padding = 0, size_t stride = 1, std::string ActivationFunction = "relu");
+    Convolution(std::ifstream& file);
 
     void FeedForward();
     void BackPropogate();
@@ -97,6 +99,7 @@ public:
     size_t poolingSize;
 
     MaxPooling(size_t poolSize = 2);
+    MaxPooling(std::ifstream& file);
 
     void FeedForward();
     void BackPropogate();
@@ -126,6 +129,7 @@ public:
     std::vector<float> biasWeights, biasGradients;
 
     FullyConnected(size_t outputSize, std::string ActivationFunction = "relu");
+    FullyConnected(std::ifstream& file);
 
     void FeedForward();
     void BackPropogate();
