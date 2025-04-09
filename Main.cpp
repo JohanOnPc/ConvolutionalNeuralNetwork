@@ -22,12 +22,12 @@ int main()
     
     NeuralNetwork* model = new NeuralNetwork();
     model->AddLayer(new Input(28, 28, 1));
-    model->AddLayer(new FullyConnected(256, "relu"));
+    model->AddLayer(new FullyConnected(128, "relu"));
     model->AddLayer(new FullyConnected(64, "relu"));
     model->AddLayer(new FullyConnected(64, "relu"));
     model->AddLayer(new FullyConnected(10, "softmax"));
 
-    model->Create(4E-5f, 0.1f);
+    model->Create(6E-5f, 0.1f);
     model->PrintSummary();
 
     DataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
