@@ -26,7 +26,7 @@ public:
     void Fit(size_t epochs, const struct DataSet& dataSet);
     void Fit(size_t epochs, const std::vector<std::vector<float>>& trainInput, const std::vector<size_t>& trainLabels, const std::vector<std::vector<float>>& validationInput, const std::vector<size_t>& validationLabels);
 
-    void SetLearningRate(float learningRate) const;
+    void SetLearningRate(float learningRate, float decayRate = 0.f);
 
     void SaveModel(const std::string& fileName) const;
     void LoadModel(const std::string& fileName);

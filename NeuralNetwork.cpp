@@ -124,11 +124,15 @@ void NeuralNetwork::Fit(size_t epochs, const std::vector<std::vector<float>>& tr
 		//Update learning rate based on the decay rate
 
 		learningRate /= (1.f + decayRate);
+		SetLearningRate(learningRate, decayRate);
 	}
 }
 
-void NeuralNetwork::SetLearningRate(float learningRate) const
+void NeuralNetwork::SetLearningRate(float learningRate, float decayRate)
 {
+	this->learningRate = learningRate;
+	this->decayRate = decayRate;
+
 	for (auto& layer : Layers)
 		layer->learningRate = learningRate;
 }
@@ -177,6 +181,7 @@ void NeuralNetwork::LoadModel(const std::string& fileName)
 				this->AddLayer(new MaxPooling(file));
 				break;
 			case FullyConnectedLayer:
+				this->AddLayer(new FullyConnected(file, Layers[i - 1]));
 				break;
 			};
 					

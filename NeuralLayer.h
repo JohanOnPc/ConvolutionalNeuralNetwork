@@ -129,7 +129,7 @@ public:
     std::vector<float> biasWeights, biasGradients;
 
     FullyConnected(size_t outputSize, std::string ActivationFunction = "relu");
-    FullyConnected(std::ifstream& file);
+    FullyConnected(std::ifstream& file, NeuralLayer* previousLayer);
 
     void FeedForward();
     void BackPropogate();

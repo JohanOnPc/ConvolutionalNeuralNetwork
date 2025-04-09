@@ -521,9 +521,47 @@ FullyConnected::FullyConnected(size_t outputSize, std::string ActivationFunction
     layerType = LayerTypes::FullyConnectedLayer;
 }
 
-FullyConnected::FullyConnected(std::ifstream& file)
+FullyConnected::FullyConnected(std::ifstream& file, NeuralLayer* previousLayer)
 {
+    file.read((char*)&outputChannels, sizeof(outputChannels));
+    file.read((char*)&outputHeight, sizeof(outputHeight));
+    file.read((char*)&outputWidth, sizeof(outputWidth));
 
+    std::getline(file, ActivationFunction, '\0');
+
+    size_t size = 0;
+
+    file.read((char*)&size, sizeof(size));
+
+    weights.reserve(size);
+    weightGradients.assign(size, 0.f);
+
+    for (int i = 0; i < size; i++) {
+        float weight;
+        file.read((char*)&weight, sizeof(weight));
+        weights.push_back(weight);
+    }
+
+    file.read((char*)&size, sizeof(size));
+
+    biasWeights.reserve(size);
+    biasGradients.assign(size, 0.f);
+
+    for (int i = 0; i < size; i++) {
+        float weight;
+        file.read((char*)&weight, sizeof(weight));
+        biasWeights.push_back(weight);
+    }
+
+    layerType = LayerTypes::FullyConnectedLayer;
+
+    SetActivationFuction(ActivationFunction);
+
+    outputs.assign(outputHeight, 0.f);
+    outputGradients.assign(outputHeight, 0.f);
+
+    if (previousLayer)
+        sizePreviousLayer = previousLayer->outputWidth * previousLayer->outputHeight * previousLayer->outputChannels;
 }
 
 void FullyConnected::FeedForward()
