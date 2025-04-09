@@ -27,18 +27,18 @@ int main()
     model->AddLayer(new FullyConnected(64, "relu"));
     model->AddLayer(new FullyConnected(10, "softmax"));
 
-    model->Create(6E-5f, 0.1f);
+    model->Create(1E-4f, 0.1f);
     model->PrintSummary();
 
     DataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
 
-    model->Fit(20, _dataSet);
+    model->Fit(10, _dataSet);
 
-    model->SaveModel("better.model");
+    model->SaveModel("best.model");
 
     NeuralNetwork* model2 = new NeuralNetwork();
 
-    model2->LoadModel("better.model");
+    model2->LoadModel("best.model");
 
     model2->PrintSummary();
 
