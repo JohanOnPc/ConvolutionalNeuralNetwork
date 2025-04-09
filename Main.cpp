@@ -28,15 +28,17 @@ int main()
     model->Create(3E-5f, 0.1f);
     model->PrintSummary();*/
 
-    DataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
+    //DataSet _dataSet = ReadMNISTDataSet("dataset/train-images.idx3-ubyte", "dataset/train-labels.idx1-ubyte", "dataset/t10k-images.idx3-ubyte", "dataset/t10k-labels.idx1-ubyte");
 
-    model->Fit(0, _dataSet);
+    //model->Fit(0, _dataSet);
 
-    model->SaveModel("model.txt");
+   //model->SaveModel("model.txt");
 
     NeuralNetwork* model2 = new NeuralNetwork();
 
     model2->LoadModel("model.txt");
+
+    model2->PrintSummary();
 
     return 0;
 }

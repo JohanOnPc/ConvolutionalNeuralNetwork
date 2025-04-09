@@ -132,7 +132,8 @@ Convolution::Convolution(std::ifstream& file)
     file.read((char*)&outputHeight, sizeof(outputHeight));
     file.read((char*)&outputWidth, sizeof(outputWidth));
 
-    file >> ActivationFunction;
+    //file >> ActivationFunction;
+    std::getline(file, ActivationFunction, '\0');
 
     file.read((char*)&kernelSize, sizeof(kernelSize));
     file.read((char*)&kernelAmount, sizeof(kernelAmount));
@@ -402,6 +403,26 @@ MaxPooling::MaxPooling(size_t poolSize) :
     layerType = LayerTypes::MaxPoolingLayer;
 }
 
+MaxPooling::MaxPooling(std::ifstream& file)
+{
+    size_t outputChannels, outputHeight, outputWidth;
+
+    file.read((char*)&outputChannels, sizeof(outputChannels));
+    file.read((char*)&outputHeight, sizeof(outputHeight));
+    file.read((char*)&outputWidth, sizeof(outputWidth));
+    file.read((char*)&poolingSize, sizeof(poolingSize));
+
+    this->outputChannels = outputChannels;
+    this->outputHeight = outputHeight;
+    this->outputWidth = outputWidth;
+
+    layerType = LayerTypes::MaxPoolingLayer;
+
+    outputs.assign(outputWidth * outputHeight * outputChannels, 0.0f);
+    maxIndexes.assign(outputWidth * outputHeight * outputChannels, 0);
+    outputGradients.assign(outputWidth * outputHeight * outputChannels, 0.f);
+}
+
 void MaxPooling::FeedForward()
 {
     for (size_t k = 0; k < outputChannels; k++) {
@@ -498,6 +519,11 @@ FullyConnected::FullyConnected(size_t outputSize, std::string ActivationFunction
     SetActivationFuction(ActivationFunction);
 
     layerType = LayerTypes::FullyConnectedLayer;
+}
+
+FullyConnected::FullyConnected(std::ifstream& file)
+{
+
 }
 
 void FullyConnected::FeedForward()

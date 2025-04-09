@@ -162,32 +162,29 @@ void NeuralNetwork::LoadModel(const std::string& fileName)
 
 		for (int i = 0; i < size; i++) {
 			uint8_t layerType;
-			size_t outputChannels, outputHeight, outputWidth;
 
 			file.read((char*)&layerType, sizeof(layerType));
-
-			file.read((char*)&outputChannels, sizeof(outputChannels));
-			file.read((char*)&outputHeight, sizeof(outputHeight));
-			file.read((char*)&outputWidth, sizeof(outputWidth));
 
 			switch (layerType)
 			{
 			case InputLayer:
-				this->AddLayer(new Input(outputWidth, outputHeight, outputChannels));
+				this->AddLayer(new Input(file));
 				break;
 			case ConvolutionLayer:
-				size_t kernelAmount, kernelSize, padding;
-				std::string activationFunction;
-
-				file >> activationFunction;
-
-				file.read((char*)&kernelSize, sizeof(kernelSize));
-				file.read((char*)&kernelAmount, sizeof(kernelAmount));
-				file.read((char*)&padding, sizeof(padding));
-
-				this->AddLayer(new Convolution(kernelAmount, kernelSize, padding, 1, activationFunction));
-			}
+				this->AddLayer(new Convolution(file));
+			case MaxPoolingLayer:
+				break;
+			case FullyConnectedLayer:
+				break;
+			};
 					
+		}
+
+		NeuralLayer* previousLayer = nullptr;
+		for (auto& layer : Layers)
+		{
+			layer->previousLayer = previousLayer;
+			previousLayer = layer;
 		}
 	}
 	else {
