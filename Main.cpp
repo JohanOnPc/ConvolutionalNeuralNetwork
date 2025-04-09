@@ -32,7 +32,7 @@ int main()
 
     //model->Fit(0, _dataSet);
 
-   //model->SaveModel("model.txt");
+    model->SaveModel("model.txt");
 
     NeuralNetwork* model2 = new NeuralNetwork();
 

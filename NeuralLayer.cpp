@@ -473,7 +473,7 @@ void MaxPooling::SaveLayer(std::ofstream& file) const
     if (file.is_open()) {
         NeuralLayer::SaveLayer(file);
 
-        file << poolingSize;
+        file.write((const char*)&poolingSize, sizeof(poolingSize));
     }
 }
 

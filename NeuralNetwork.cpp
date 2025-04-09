@@ -172,7 +172,9 @@ void NeuralNetwork::LoadModel(const std::string& fileName)
 				break;
 			case ConvolutionLayer:
 				this->AddLayer(new Convolution(file));
+				break;
 			case MaxPoolingLayer:
+				this->AddLayer(new MaxPooling(file));
 				break;
 			case FullyConnectedLayer:
 				break;
